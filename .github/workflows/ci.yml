@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy,rustfmt
+          targets: wasm32-wasip1-threads
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Rust checks
+        run: make test-rust
+      - name: Build embedded WASM
+        run: make wasm
+      - name: Go format
+        run: test -z "$(gofmt -l ./onnx ./internal ./examples)"
+      - name: Go vet
+        run: CGO_ENABLED=0 go vet ./...
+      - name: Go tests
+        run: CGO_ENABLED=0 go test ./...
+      - name: Go build
+        run: CGO_ENABLED=0 go build ./...
+      - name: Linux arm64 cross-build
+        run: CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build ./...
