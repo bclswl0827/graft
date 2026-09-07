@@ -11,6 +11,17 @@ Run it from the repository root:
 go run ./examples/llm
 ```
 
+The program generates one story immediately. Press Enter to generate another
+story from the same prompt, or enter `q` and press Enter to quit. `Ctrl+C`
+also exits the program. Each result includes the generated token count,
+inference duration, and tokens per second. Model loading, tokenization, and
+decoding are excluded from this timing.
+
+The engine and optimized model plan remain loaded and are reused between
+generations. The compatibility graph does not use a key/value cache, so each
+new token recomputes the current sequence; no inference state is retained when
+starting the next story.
+
 The default prompt is `Once upon a time, there was a little girl named Lily`.
 Pass arguments to use another English prompt:
 

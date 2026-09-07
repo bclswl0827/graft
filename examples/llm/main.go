@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	_ "embed"
 	"fmt"
 	"math"
@@ -8,6 +9,7 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/bclswl0827/graft/onnx"
 )
@@ -57,23 +59,52 @@ func run(prompt string) error {
 	}
 	defer model.Close()
 
-	tokenIDs, err := tokenizer.encode(prompt)
-	if err != nil {
-		return fmt.Errorf("encode prompt: %w", err)
+	scanner := bufio.NewScanner(os.Stdin)
+	for {
+		tokenIDs, err := tokenizer.encode(prompt)
+		if err != nil {
+			return fmt.Errorf("encode prompt: %w", err)
+		}
+		promptTokens := len(tokenIDs)
+		started := time.Now()
+		tokenIDs, ended, err := generate(model, tokenizer, tokenIDs, maxNewTokens)
+		elapsed := time.Since(started)
+		if err != nil {
+			return err
+		}
+		text, err := tokenizer.decode(tokenIDs)
+		if err != nil {
+			return fmt.Errorf("decode output: %w", err)
+		}
+		if !ended {
+			text = trimIncompleteSentence(text)
+		}
+		fmt.Println(text)
+		generatedTokens := len(tokenIDs) - promptTokens
+		fmt.Printf(
+			"\nGenerated %d tokens in %.2fs (%.2f tokens/s)\n",
+			generatedTokens,
+			elapsed.Seconds(),
+			float64(generatedTokens)/elapsed.Seconds(),
+		)
+
+		for {
+			fmt.Print("\nPress Enter to generate again, or enter q to quit: ")
+			if !scanner.Scan() {
+				if err := scanner.Err(); err != nil {
+					return fmt.Errorf("read command: %w", err)
+				}
+				return nil
+			}
+			command := strings.TrimSpace(scanner.Text())
+			if strings.EqualFold(command, "q") {
+				return nil
+			}
+			if command == "" {
+				break
+			}
+		}
 	}
-	tokenIDs, ended, err := generate(model, tokenizer, tokenIDs, maxNewTokens)
-	if err != nil {
-		return err
-	}
-	text, err := tokenizer.decode(tokenIDs)
-	if err != nil {
-		return fmt.Errorf("decode output: %w", err)
-	}
-	if !ended {
-		text = trimIncompleteSentence(text)
-	}
-	fmt.Println(text)
-	return nil
 }
 
 func generate(
