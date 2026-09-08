@@ -27,6 +27,10 @@ _testmain.go
 /runtime/target/
 /.cargo/
 
+# Downloaded OCR example assets
+/examples/ocr/model.onnx
+/examples/ocr/ppocr_keys_v1.txt
+
 # Python caches and local environments
 __pycache__/
 *.py[cod]

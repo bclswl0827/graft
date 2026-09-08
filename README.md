@@ -66,7 +66,8 @@ integration. External-data models are supported through
 - Goroutine-safe engines, models, and inference calls.
 
 See [`examples/temperature`](examples/temperature),
-[`examples/iris`](examples/iris) and [`examples/llm`](examples/llm).
+[`examples/iris`](examples/iris), [`examples/ocr`](examples/ocr) and
+[`examples/llm`](examples/llm).
 
 ## Limitations
 
